@@ -1,0 +1,17 @@
+mkdir web_app
+cd web_app
+
+python -m venv venv
+
+
+venv\Scripts\activate
+
+
+pip install flask scikit-learn joblib numpy pandas
+
+
+To run it, in the Terminal
+python app.py
+
+
+http://127.0.0.1:5000/	

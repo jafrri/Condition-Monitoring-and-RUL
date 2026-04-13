@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Conditioning Monitoring System</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .main-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 50px 20px;
+        }
+
+        .logo {
+            margin-right: 40px;
+            margin-left: -300px; /* Move more left */
+            flex-shrink: 0;
+        }
+
+        .logo img {
+            width: 280px;
+            height: auto;
+            object-fit: contain;
+            display: block;
+        }
+
+        .container {
+            max-width: 800px;
+            padding: 25px;
+            background-color: #fff;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            flex-grow: 1;
+            position: relative;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"], input[type="file"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        input[type="submit"], button {
+            margin-top: 20px;
+            padding: 12px;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        input[type="submit"] {
+            background-color: #27ae60;
+            color: #fff;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #219150;
+        }
+
+        button {
+            background-color: #e74c3c;
+            color: #fff;
+            margin-left: 0;
+        }
+
+        button:hover {
+            background-color: #c0392b;
+        }
+
+        .prediction {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #ecf0f1;
+            border-left: 5px solid #2980b9;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .plot-container {
+            margin-top: 40px;
+        }
+
+        .plot-container h3 {
+            text-align: center;
+            color: #34495e;
+            margin-bottom: 10px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+
+        thead {
+            background-color: #f2f2f2;
+        }
+
+        /* Loading spinner styles */
+        #spinner {
+            display: none;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 40px;
+            height: 40px;
+            border: 5px solid #f3f3f3; /* Light gray */
+            border-top: 5px solid #3498db; /* Blue */
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            z-index: 1000;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg);}
+            100% { transform: rotate(360deg);}
+        }
+
+        @media screen and (max-width: 768px) {
+            .main-wrapper {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .logo {
+                margin-bottom: 20px;
+                margin-right: 0;
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-wrapper">
+        <div class="logo">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Firm Logo" />
+        </div>
+
+        <div class="container">
+            <h1>Conditioning Monitoring System</h1>
+            <form method="POST" enctype="multipart/form-data" id="uploadForm">
+
+                <label for="file">Upload Vibrational Data (.csv or .mat):</label>
+                <input type="file" name="file" required />
+
+                <input type="submit" value="Predict" />
+                <button type="button" onclick="window.location.href='/'">Reset</button>
+            </form>
+
+            <!-- Loading spinner -->
+            <div id="spinner"></div>
+
+            {% if prediction_text %}
+            <div class="prediction">
+                {{ prediction_text|safe }}
+            </div>
+            {% endif %}
+
+
+
+            <div class="plot-container">
+                {% if time_plot %}
+                    <h3>Time Domain Plot</h3>
+                    <div>{{ time_plot | safe }}</div>
+                {% endif %}
+            </div>
+
+            {% if time_stats %}
+            <h3>Time Domain Features</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for key, value in time_stats.items() %}
+                    <tr>
+                        <td>{{ key }}</td>
+                        <td>{{ "%.4f"|format(value) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+
+            <div class="plot-container">
+                {% if freq_plot %}
+                    <h3>Frequency Domain Plot</h3>
+                    <div>{{ freq_plot | safe }}</div>
+                {% endif %}
+            </div>
+
+            {% if freq_stats %}
+            <h3>Frequency Domain Features</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for key, value in freq_stats.items() %}
+                    <tr>
+                        <td>{{ key }}</td>
+                        <td>{{ "%.4f"|format(value) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById("uploadForm");
+        form.addEventListener("submit", function () {
+            document.getElementById("spinner").style.display = "block";
+        });
+    </script>
+</body>
+</html>
